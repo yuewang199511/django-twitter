@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'accounts',
     'tweets',
     'friendships',
+    'newsfeeds',
 ]
 
 REST_FRAMEWORK = {
@@ -137,3 +138,12 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 INTERNAL_IPS = ['10.0.2.2']
+
+# only uncomment for trying commands in shell
+# LOGGING = {
+# 'version': 1, 'disable_existing_loggers': False, 'handlers': {
+# 'console': {
+# 'level': 'DEBUG', 'class': 'logging.StreamHandler', }, },'loggers': {
+# 'django.db.backends': {
+# 'handlers': ['console'], 'propagate': True, 'level': 'DEBUG', }, }
+# }

@@ -19,6 +19,15 @@ class FriendshipViewSet(viewsets.GenericViewSet):
     serializer_class =  FriendshipSerializerForCreate
     queryset = User.objects.all()
 
+    def list(self, request):
+        if 'user_id' not in request.query_params:
+            return Response('missing user_id', status=400)
+        friendships = Friendship.objects.filter(
+            from_user_id=request.query_params['user_id']
+        ).order_by('-created_at')
+        serializer = FollowingSerializer(friendships, many=True)
+        return Response({'following': serializer.data})
+
     @action(methods=['GET'], detail=True, permission_classes=[AllowAny])
     def followers(self, request, pk):
         friendships = Friendship.objects.filter(to_user_id=pk).order_by('-created_at')
