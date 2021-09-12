@@ -10,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from utils.decorators import required_params
 
+
 class CommentViewSet(viewsets.GenericViewSet):
     """
     只实现 list, create, update, destroy 的方法
@@ -22,13 +23,25 @@ class CommentViewSet(viewsets.GenericViewSet):
     def get_permissions(self):
         # 注意要加用 AllowAny() / IsAuthenticated() 实例化出对象
         # 而不是 AllowAny / IsAuthenticated 这样只是一个类名
-        # 同时给出IsAuthenticated和IsObjectOwner是为了先检测是否登录并给出正确的报错信息
-        #
         if self.action == 'create':
             return [IsAuthenticated()]
         if self.action in ['destroy', 'update']:
             return [IsAuthenticated(), IsObjectOwner()]
         return [AllowAny()]
+
+    @required_params(params=['tweet_id'])
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        comments = self.filter_queryset(queryset).order_by('created_at')
+        serializer = CommentSerializer(
+            comments,
+            context={'request': request},
+            many=True,
+        )
+        return Response(
+            {'comments': serializer.data},
+            status=status.HTTP_200_OK,
+        )
 
     def create(self, request, *args, **kwargs):
         data = {
@@ -48,28 +61,26 @@ class CommentViewSet(viewsets.GenericViewSet):
         # save 方法会触发 serializer 里的 create 方法，点进 save 的具体实现里可以看到
         comment = serializer.save()
         return Response(
-            CommentSerializer(comment).data,
+            CommentSerializer(comment, context={'request': request}).data,
             status=status.HTTP_201_CREATED,
         )
 
     def update(self, request, *args, **kwargs):
         # get_object 是 DRF 包装的一个函数，会在找不到的时候 raise 404 error
         # 所以这里无需做额外判断
-        # 一般实现时都是部分更新的功能，但使用的函数仍然是update
         serializer = CommentSerializerForUpdate(
             instance=self.get_object(),
             data=request.data,
         )
         if not serializer.is_valid():
-            return Response({
-                'message': 'Please check input',
-                'errors': serializer.errors,
+            raise Response({
+                'message': 'Please check input'
             }, status=status.HTTP_400_BAD_REQUEST)
         # save 方法会触发 serializer 里的 update 方法，点进 save 的具体实现里可以看到
         # save 是根据 instance 参数有没有传来决定是触发 create 还是 update
         comment = serializer.save()
         return Response(
-            CommentSerializer(comment).data,
+            CommentSerializer(comment, context={'request': request}).data,
             status=status.HTTP_200_OK,
         )
 
@@ -79,13 +90,3 @@ class CommentViewSet(viewsets.GenericViewSet):
         # DRF 里默认 destroy 返回的是 status code = 204 no content
         # 这里 return 了 success=True 更直观的让前端去做判断，所以 return 200 更合适
         return Response({'success': True}, status=status.HTTP_200_OK)
-
-    @required_params(params=['tweet_id'])
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        comments = self.filter_queryset(queryset).order_by('created_at')
-        serializer = CommentSerializer(comments, many=True)
-        return Response(
-            {'comments': serializer.data},
-            status=status.HTTP_200_OK,
-        )
