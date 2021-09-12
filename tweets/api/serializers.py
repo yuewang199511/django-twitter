@@ -7,6 +7,7 @@ from tweets.models import Tweet
 
 
 class TweetSerializer(serializers.ModelSerializer):
+    # overload the user type as the defined account type
     user = UserSerializer()
     comments_count = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
@@ -49,6 +50,10 @@ class TweetSerializerForCreate(serializers.ModelSerializer):
 
 
 class TweetSerializerForDetail(TweetSerializer):
+    # <HOMEWORK> 使用 serialziers.SerializerMethodField 的方式实现 comments
+    # 通过指定source='comment_set'可以查找到所有该tweet对应的comment.这里会自动生成一个外键映射
+    # 所有有1对多的外键都会自动生成一个_set的属性
+    # 此处为DRF的反向关联功能，见 https://docs.djangoproject.com/zh-hans/3.2/topics/db/queries/#related-objects
     comments = CommentSerializer(source='comment_set', many=True)
     likes = LikeSerializer(source='like_set', many=True)
 

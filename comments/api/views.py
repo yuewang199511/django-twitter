@@ -23,6 +23,7 @@ class CommentViewSet(viewsets.GenericViewSet):
     def get_permissions(self):
         # 注意要加用 AllowAny() / IsAuthenticated() 实例化出对象
         # 而不是 AllowAny / IsAuthenticated 这样只是一个类名
+        # 同时给出IsAuthenticated和IsObjectOwner是为了先检测是否登录并给出正确的报错信息
         if self.action == 'create':
             return [IsAuthenticated()]
         if self.action in ['destroy', 'update']:
@@ -68,6 +69,7 @@ class CommentViewSet(viewsets.GenericViewSet):
     def update(self, request, *args, **kwargs):
         # get_object 是 DRF 包装的一个函数，会在找不到的时候 raise 404 error
         # 所以这里无需做额外判断
+        # 一般实现时都是部分更新的功能，但使用的函数仍然是update
         serializer = CommentSerializerForUpdate(
             instance=self.get_object(),
             data=request.data,

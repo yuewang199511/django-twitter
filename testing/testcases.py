@@ -40,6 +40,9 @@ class TestCase(DjangoTestCase):
         return Comment.objects.create(user=user, tweet=tweet, content=content)
 
     def create_like(self, user, target):
+        # target is comment or tweet
+        # ContentType.objects.get_for_model('{modelname}')即可取出对应model在content type表单中的ID
+        # 使用get or create防止测试时因重复出现违反unique约束
         instance, _ = Like.objects.get_or_create(
             content_type=ContentType.objects.get_for_model(target.__class__),
             object_id=target.id,

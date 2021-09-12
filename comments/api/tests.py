@@ -85,6 +85,7 @@ class CommentApiTests(TestCase):
         response = self.anonymous_client.put(url, {'content': 'new'})
         self.assertEqual(response.status_code, 403)
         # 非本人不能更新
+        # 在测试中需要用refresh_from_db才能看到更改, 因为此处comment是一个内存中的comment对象，而不是数据库中的
         response = self.dongxie_client.put(url, {'content': 'new'})
         self.assertEqual(response.status_code, 403)
         comment.refresh_from_db()
