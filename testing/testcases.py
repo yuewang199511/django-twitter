@@ -6,7 +6,6 @@ from likes.models import Like
 from tweets.models import Tweet
 from rest_framework.test import APIClient
 
-
 class TestCase(DjangoTestCase):
     @property
     def anonymous_client(self):
@@ -44,3 +43,9 @@ class TestCase(DjangoTestCase):
             user=user,
         )
         return instance
+
+    def create_user_and_client(self, *args, **kwargs):
+        user = self.create_user(*args, **kwargs)
+        client = APIClient()
+        client.force_authenticate(user)
+        return user, client
