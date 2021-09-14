@@ -10,7 +10,6 @@ from tweets.api.serializers import (
 from tweets.models import Tweet
 from utils.decorators import required_params
 
-
 class TweetViewSet(viewsets.GenericViewSet,
                    viewsets.mixins.CreateModelMixin,
                    viewsets.mixins.ListModelMixin):
