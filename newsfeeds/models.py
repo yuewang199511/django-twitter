@@ -2,7 +2,9 @@
 from django.db import models
 from django.contrib.auth.models import User
 from tweets.models import Tweet
-
+from utils.memcached_helper import MemcachedHelper
+from django.db.models.signals import post_save, pre_delete
+from utils.listeners import invalidate_object_cache
 
 class NewsFeed(models.Model):
     # 注意这个 user 不是存储谁发了这条 tweet，而是谁可以看到这条 tweet
@@ -19,3 +21,10 @@ class NewsFeed(models.Model):
 
     def __str__(self):
         return f'{self.created_at} inbox of {self.user}: {self.tweet}'
+
+    @property
+    def cached_tweet(self):
+        return MemcachedHelper.get_object_through_cache(Tweet, self.tweet_id)
+
+post_save.connect(invalidate_object_cache, sender=Tweet)
+pre_delete.connect(invalidate_object_cache, sender=Tweet)

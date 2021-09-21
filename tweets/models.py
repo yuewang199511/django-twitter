@@ -1,10 +1,10 @@
-from accounts.services import UserService
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from likes.models import Like
 from utils.time_helpers import utc_now
 from tweets.constants import TweetPhotoStatus, TWEET_PHOTO_STATUS_CHOICES
+from utils.memcached_helper import MemcachedHelper
 
 # Please use makemigrations then migrate if this script is created or modified
 # if migrations directory is accidentally deleted, run makemigrations {app_name}
@@ -42,7 +42,7 @@ class Tweet(models.Model):
 
     @property
     def cached_user(self):
-        return UserService.get_user_through_cache(self.user_id)
+        return MemcachedHelper.get_object_through_cache(User, self.user_id)
 
 class TweetPhoto(models.Model):
     # 图片在哪个 Tweet 下面
