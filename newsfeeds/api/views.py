@@ -14,8 +14,12 @@ class NewsFeedViewSet(viewsets.GenericViewSet):
 
     def list(self, request):
         # context 会被向下传递到serializer中包含的所有下级serializer
-        newsfeeds = NewsFeedService.get_cached_newsfeeds(request.user.id)
-        page = self.paginate_queryset(newsfeeds)
+        cached_newsfeeds = NewsFeedService.get_cached_newsfeeds(request.user.id)
+        page = self.paginator.paginate_cached_list(cached_newsfeeds, request)
+        # page 是None代表请求的数据不在cache中
+        if page is None:
+            queryset = NewsFeed.objects.filter(user=request.user)
+            page = self.paginate_queryset(queryset)
         serializer = NewsFeedSerializer(
             page,
             context={'request': request},
