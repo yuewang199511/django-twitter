@@ -1,5 +1,7 @@
+from tweets.models import Tweet
 from tweets.models import TweetPhoto
-
+from twitter.cache import USER_TWEETS_PATTERN
+from utils.redis_helper import RedisHelper
 
 class TweetService(object):
 
@@ -15,3 +17,17 @@ class TweetService(object):
             )
             photos.append(photo)
         TweetPhoto.objects.bulk_create(photos)
+
+    @classmethod
+    def get_cached_tweets(cls, user_id):
+        # query set is lazy loading
+        queryset = Tweet.objects.filter(user_id=user_id).order_by('-created_at')
+        key = USER_TWEETS_PATTERN.format(user_id=user_id)
+        return RedisHelper.load_objects(key, queryset)
+
+    @classmethod
+    def push_tweet_to_cache(cls, tweet):
+        queryset = Tweet.objects.filter(user_id=tweet.user_id).order_by('-created_at')
+        key = USER_TWEETS_PATTERN.format(user_id=tweet.user_id)
+        # 因为新twitter需要在数组中考前，所以使用lpush
+        RedisHelper.push_object(key, tweet, queryset)

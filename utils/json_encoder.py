@@ -20,6 +20,7 @@ class JSONEncoder(DjangoJSONEncoder):
             # 唯一修改的地方，保留 mirco second 增加时间精度
             # if o.microsecond:
             #     r = r[:23] + r[26:]
+            # 这也是为了保证测试时如创建tweet不会出现大量tweet因为丢失精度而丢失先后顺序
             if r.endswith('+00:00'):
                 r = r[:-6] + 'Z'
             return r

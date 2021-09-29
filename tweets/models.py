@@ -4,6 +4,9 @@ from django.db import models
 from likes.models import Like
 from utils.time_helpers import utc_now
 from tweets.constants import TweetPhotoStatus, TWEET_PHOTO_STATUS_CHOICES
+from tweets.listeners import push_tweet_to_cache
+from utils.listeners import invalidate_object_cache
+from django.db.models.signals import post_save
 from utils.memcached_helper import MemcachedHelper
 
 # Please use makemigrations then migrate if this script is created or modified
@@ -82,3 +85,7 @@ class TweetPhoto(models.Model):
 
     def __str__(self):
         return f'{self.tweet_id}: {self.file}'
+# 如果支持tweet修改功能，则会在此处出现redis内资料和数据库内不一致的情况
+# 如果将redis改写成只存储tweet的id可解决此问题
+post_save.connect(invalidate_object_cache, sender=Tweet)
+post_save.connect(push_tweet_to_cache, sender=Tweet)
