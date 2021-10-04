@@ -1,3 +1,5 @@
+from utils.redis_helper import RedisHelper
+
 def incr_likes_count(sender, instance, created, **kwargs):
     from tweets.models import Tweet
     from django.db.models import F
@@ -14,8 +16,10 @@ def incr_likes_count(sender, instance, created, **kwargs):
     # 因此这个操作不是原子操作，必须使用 update 语句才是原子操作
     # 使用update时会将目前的tweet对象锁住 (行锁)
     # F会将对应字符串原封不动放入SQL语句中
-    tweet = instance.content_object
-    Tweet.objects.filter(id=tweet.id).update(likes_count=F('likes_count') + 1)
+
+    Tweet.objects.filter(id=instance.object_id).update(likes_count=F('likes_count') + 1)
+    RedisHelper.incr_count(instance.content_object, 'likes_count')
+    # 点赞行为本身可能为高并发行为（comment同样），如果invalidate cache会造成tweet cache可能长时间失效
 
 
 def decr_likes_count(sender, instance, **kwargs):
@@ -28,5 +32,5 @@ def decr_likes_count(sender, instance, **kwargs):
         return
 
     # handle tweet likes cancel
-    tweet = instance.content_object
-    Tweet.objects.filter(id=tweet.id).update(likes_count=F('likes_count') - 1)
+    Tweet.objects.filter(id=instance.object_id).update(likes_count=F('likes_count') - 1)
+    RedisHelper.decr_count(instance.content_object, 'likes_count')

@@ -7,6 +7,7 @@ from tweets.models import Tweet
 from rest_framework.exceptions import ValidationError
 from tweets.constants import TWEET_PHOTOS_UPLOAD_LIMIT
 from tweets.services import TweetService
+from utils.redis_helper import RedisHelper
 
 class TweetSerializer(serializers.ModelSerializer):
     # overload the user type as the defined account type
@@ -30,10 +31,12 @@ class TweetSerializer(serializers.ModelSerializer):
         )
 
     def get_likes_count(self, obj):
-        return obj.like_set.count()
+        # select count(*)变为了get redis操作
+        # N + 1 query中的N变为了N次cache操作
+        return RedisHelper.get_count(obj, 'likes_count')
 
     def get_comments_count(self, obj):
-        return obj.comment_set.count()
+        return RedisHelper.get_count(obj, 'comments_count')
 
     def get_has_liked(self, obj):
         return LikeService.has_liked(self.context['request'].user, obj)
