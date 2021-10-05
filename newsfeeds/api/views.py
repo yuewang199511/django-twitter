@@ -12,6 +12,9 @@ class NewsFeedViewSet(viewsets.GenericViewSet):
     permission_classes = [IsAuthenticated]
     pagination_class = EndlessPagination
 
+    def get_queryset(self):
+        return NewsFeed.objects.filter(user=self.request.user)
+
     def list(self, request):
         # context 会被向下传递到serializer中包含的所有下级serializer
         cached_newsfeeds = NewsFeedService.get_cached_newsfeeds(request.user.id)
