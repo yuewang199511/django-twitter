@@ -202,15 +202,15 @@ REDIS_PORT = 6379
 REDIS_DB = 0 if TESTING else 1
 REDIS_KEY_EXPIRE_TIME = 7 * 86400  # in seconds
 REDIS_LIST_LENGTH_LIMIT = 1000 if not TESTING else 20
-# only uncomment for trying commands in shell
-# LOGGING = {
-# 'version': 1, 'disable_existing_loggers': False, 'handlers': {
-# 'console': {
-# 'level': 'DEBUG', 'class': 'logging.StreamHandler', }, },'loggers': {
-# 'django.db.backends': {
-# 'handlers': ['console'], 'propagate': True, 'level': 'DEBUG', }, }
-# }
 
+# Celery Configuration Options
+# 使用如下命令把 worker 进程（只执行异步任务的进程，可以在不同的机器上）单独跑起来
+#   celery -A twitter worker -l INFO
+# celery专用的message queue在标号为2的redis数据库中
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/2' if not TESTING else 'redis://127.0.0.1:6379/0'
+CELERY_TIMEZONE = "UTC"
+# Test的时候不适用异步任务
+CELERY_TASK_ALWAYS_EAGER = TESTING
 try:
     from .local_settings import *
 except:
