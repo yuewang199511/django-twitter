@@ -10,7 +10,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from utils.decorators import required_params
-
+from django.utils.decorators import method_decorator
+from ratelimit.decorators import ratelimit
 
 
 class LikeViewSet(viewsets.GenericViewSet):
@@ -21,6 +22,7 @@ class LikeViewSet(viewsets.GenericViewSet):
 
     # 因为是post请求，所以是从data中取数据
     @required_params(method='POST', params=['content_type', 'object_id'])
+    @method_decorator(ratelimit(key='user', rate='10/s', method='POST', block=True))
     def create(self, request, *args, **kwargs):
         serializer = LikeSerializerForCreate(
             data=request.data,
@@ -41,6 +43,7 @@ class LikeViewSet(viewsets.GenericViewSet):
 
     @action(methods=['POST'], detail=False)
     @required_params(method='POST', params=['content_type', 'object_id'])
+    @method_decorator(ratelimit(key='user', rate='10/s', method='POST', block=True))
     def cancel(self, request, *args, **kwargs):
         '''
         直接使用delete会需要指定likes的id，这对前端可能不友好。所以使用一个自定义的cancel方法
